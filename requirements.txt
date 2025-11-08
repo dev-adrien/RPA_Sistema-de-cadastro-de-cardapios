@@ -1,0 +1,7 @@
+pandas
+selenium
+python-dotenv
+openpyxl
+requests
+Pillow
+XlsxWriter

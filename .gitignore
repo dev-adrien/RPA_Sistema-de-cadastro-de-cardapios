@@ -1,0 +1,11 @@
+# Arquivo de variáveis
+.env
+
+# Pastas geradas pelo processar_cardapios.py e juntar_planilhas.py
+menus_arquivados
+menus_para_processar
+planilhas_prontas
+planilhas_arquivadas
+
+# Cache dos arquivos Python
+__pycache__
