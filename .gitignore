@@ -9,3 +9,6 @@ planilhas_arquivadas
 
 # Cache dos arquivos Python
 __pycache__
+
+# Arquivo planilha_cardapio_RPA gerado a partir das imagens
+planilha_cardapio_RPA.xlsx
