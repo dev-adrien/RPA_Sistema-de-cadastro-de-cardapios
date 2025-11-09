@@ -81,7 +81,12 @@ driver = webdriver.Chrome(options=options)
 ---
 
 ## 3. Como Usar o Fluxo Completo
+### A. Na interface:
+1. Adicionar imagens;
+2. Processar Cardápios (IA);
+3. Cadastrar Produtos (RPA).
 
+### B. Manuealmente no código:
 O seu fluxo de trabalho agora é muito simples:
 
 1.  **Etapa 1:** Jogue quantas imagens de cardápio (`.png`, `.jpg`) quiser na pasta `menus_para_processar`.
