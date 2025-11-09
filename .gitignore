@@ -1,17 +1,1 @@
-# Arquivo de variáveis
 .env
-
-# Pastas geradas pelo processar_cardapios.py e juntar_planilhas.py
-menus_arquivados
-menus_para_processar
-planilhas_prontas
-planilhas_arquivadas
-
-# Cache dos arquivos Python
-__pycache__
-
-# Arquivo planilha_cardapio_RPA gerado a partir das imagens
-planilha_cardapio_RPA.xlsx
-
-# Arquivo original de categorias
-categorias.json
