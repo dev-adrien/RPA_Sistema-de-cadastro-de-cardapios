@@ -12,3 +12,6 @@ __pycache__
 
 # Arquivo planilha_cardapio_RPA gerado a partir das imagens
 planilha_cardapio_RPA.xlsx
+
+# Arquivo original de categorias
+categorias.jsoncategorias.json
