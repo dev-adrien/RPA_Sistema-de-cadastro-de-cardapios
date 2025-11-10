@@ -92,29 +92,31 @@ def extrair_dados_do_cardapio(base64_image, mime_type):
     """
     headers = {"Content-Type": "application/json"}
     
-    # --- PROMPT REFINADO (COM CLASSIFICAÇÃO, REVISÃO E AUTO-CORREÇÃO) ---
+    # --- PROMPT REFINADO (GENERALISTA, PRECISO E COM AUTO-CORREÇÃO) ---
     
     # Formata a lista de categorias vinda do ficheiro .json
     lista_categorias_formatada = ", ".join([f"'{c}'" for c in CATEGORIAS_PERMITIDAS])
     
     prompt = (
-        "Você é um assistente especialista em extração e formatação de dados de cardápios. "
-        "Sua tarefa é analisar a imagem de um cardápio, extrair TODOS os itens, e formatar o texto com precisão cirúrgica."
-        "Os cardápios podem ter layouts muito diferentes (listas simples, colunas, tabelas, etc.). "
-        "Sua análise deve ser primariamente VISUAL para associar corretamente os dados."
+        "Você é um assistente especialista em extração de dados de imagens. "
+        "Sua tarefa é analisar a imagem (que pode ser um cardápio, uma tabela de preços de salão, uma lista de produtos de loja, ou um screenshot de WhatsApp) "
+        "e extrair TODOS os itens, serviços e seus respetivos preços, formatando o texto com precisão cirúrgica."
 
-        "--- REGRAS DE ANÁLISE VISUAL ---"
-        "1. [ASSOCIAÇÃO DE PREÇO]: Preste muita atenção ao layout. O preço pode estar "
-        "   à direita do nome, abaixo da descrição, ou em colunas separadas (P, M, G). "
-        "   Associe o preço correto ao item correto."
-
+        "--- REGRAS DE ANÁLISE VISUAL E CONTEXTUAL ---"
+        "1. [OBJETIVO]: O objetivo é extrair uma lista de 'Itens' (que podem ser produtos ou serviços) com seus 'Nomes', 'Valores', 'Categorias' e 'Descrições'."
+        "2. [ASSOCIAÇÃO DE PREÇO]: Preste muita atenção ao layout visual. O preço pode estar à direita do nome, abaixo da descrição, ou em colunas (P, M, G). Associe o preço correto ao item/serviço correto."
+        
         "--- REGRA CRÍTICA DE EXPANSÃO (A MAIS IMPORTANTE) ---"
-        "Se um item tiver múltiplas variações de tamanho ou tipo (ex: P, M, G) "
+        "Se um item tiver múltiplas variações de tamanho ou tipo (ex: P, M, G; 'Corte', 'Corte + Barba') "
         "com preços diferentes, você DEVE criar uma LINHA SEPARADA para cada variação."
-        "EXEMPLO: 'Pizza Calabresa | P: R$ 20,00 | M: R$ 30,00' "
+        "EXEMPLO 1: 'Pizza Calabresa | P: R$ 20,00 | M: R$ 30,00' "
         "DEVE SER GERADO COMO: "
-        "1. {'Nome': 'Pizza Calabresa P', ...} "
-        "2. {'Nome': 'Pizza Calabresa M', ...} "
+        "1. {'Nome': 'Pizza Calabresa P', 'Valor': 'R$ 20,00', ...} "
+        "2. {'Nome': 'Pizza Calabresa M', 'Valor': 'R$ 30,00', ...} "
+        "EXEMPLO 2: 'Corte | Cabelo: R$ 30 | Cabelo+Barba: R$ 50'"
+        "DEVE SER GERADO COMO:"
+        "1. {'Nome': 'Corte Cabelo', 'Valor': 'R$ 30', ...}"
+        "2. {'Nome': 'Corte Cabelo+Barba', 'Valor': 'R$ 50', ...}"
 
         "--- REGRAS CRÍTICAS DE FORMATAÇÃO DE TEXTO ---"
         "1. [Nome]: Formate como um título (Title Case). "
@@ -124,16 +126,18 @@ def extrair_dados_do_cardapio(base64_image, mime_type):
         "   - Ex: 'Molho de tomate, queijo e orégano. Acompanha borda.'"
         "   - Se não houver descrição, retorne uma string vazia ('')."
 
-        "--- REGRAS CRÍTICAS DE CLASSIFICAÇÃO E PRECISÃO ---"
-        "1. [CLASSIFICAÇÃO DE CATEGORIA]: Você DEVE classificar cada item numa das seguintes categorias: "
+        "--- REGRAS CRÍTICAS DE CLASSIFICAÇÃO E PRECISÃO (AUTO-CORREÇÃO) ---"
+        "1. [CLASSIFICAÇÃO DE CATEGORIA]: A sua tarefa é classificar cada item numa das seguintes categorias pré-definidas: "
         f"   {lista_categorias_formatada}. "
-        "   Use o título da seção do cardápio (ex: 'SANDUÍCHES') para decidir a categoria correta."
+        "   Use o título da seção na imagem (ex: 'SANDUÍCHES', 'SERVIÇOS DE MANICURE') para decidir a categoria correta da lista. "
+        "   Se a imagem for de um salão e a seção for 'Manicure', e a lista de categorias tiver 'Unhas', classifique como 'Unhas'. "
         "   Se um item não se encaixar em nenhuma, use a categoria 'Outros'."
 
-        "2. [REVISÃO DE PRECISÃO (EX: 'Arobe' vs 'Árabe')]: O OCR pode errar. Antes de finalizar, "
-        "   reveja as palavras que extraiu. Se uma palavra parecer um erro de digitação ou não for uma "
-        "   palavra real em Português (ex: 'Arobe', 'Calabreza'), use a descrição do item ou o contexto "
-        "   do cardápio para deduzir e corrigir a palavra (ex: 'Árabe', 'Calabresa')."
+        "2. [METODOLOGIA DE REVISÃO DE PRECISÃO (O MAIS IMPORTANTE)]: O OCR do texto pode conter erros. "
+        "   Antes de finalizar, você DEVE agir como um revisor."
+        "   - Se uma palavra extraída parecer um erro de digitação ou não for uma palavra real em Português (ex: 'Arobe', 'Calabreza', 'Sobrancela'), você DEVE corrigi-la."
+        "   - Use o contexto da imagem (como a descrição ou outros itens) para deduzir e corrigir a palavra (ex: 'Árabe', 'Calabresa', 'Sobrancelha')."
+        "   - Verifique a plausibilidade. O seu conhecimento da língua portuguesa é crucial para corrigir erros de OCR."
 
         "--- SAÍDA ---"
         "Retorne TODOS os itens encontrados, seguindo TODAS as regras acima (visuais, de expansão, "
